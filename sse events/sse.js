@@ -2,9 +2,8 @@ import {
     Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DeviceTokenRegistration } from "../../api";
 import EventSource from "react-native-sse";
-import SSEObjectResolver from "../../utilities/SSEObjectResolver";
+import SSEObjectResolver from "./SSEObjectResolver";
 
 var sseList = [];
 
@@ -52,7 +51,6 @@ export const getSSEEvents = (props) => {
         const found = arr.some(data => data?.eventType === item?.eventType);
         if (found === false) {
             sseList.push(item);
-            setRefreshData(true);
         } else {
             for (let i = 0; i < sseList.length; i++) {
                 if (sseList[i]?.vinNumber === item?.vinNumber) {
@@ -62,7 +60,7 @@ export const getSSEEvents = (props) => {
                 }
             }
             sseList.push(item);
-            setRefreshData(true);
+            
         }
     };
 },
@@ -76,6 +74,68 @@ export const getAPI = async (endURL) => {
             return error;
         }
     );
+};
+
+export const sendAPICall = async (
+  url,
+  payload,
+  successHandler,
+  errorHandler,
+  requestType,
+  isCustomer
+) => {
+  const authToken = await AsyncStorage.getItem("AuthToken");
+  let config = {};
+  if (isCustomer && authToken) {
+    config = {
+      headers: {
+        Authorization: authToken,
+      },
+    };
+  }
+  if (requestType === "PUT") {
+    axios
+      .put(url, payload, config)
+      .then((response) => {
+        if (response.status === 401) {
+          return;
+        }
+        successHandler(response);
+      })
+      .catch((error) => {
+        if (errorHandler) {
+          errorHandler(error);
+        }
+      });
+  } else if (requestType === "GET") {
+    config.type = "text";
+    axios
+      .get(url, config)
+      .then((response) => {
+        if (response.status === 401) {
+          return;
+        }
+        successHandler(response.data);
+      })
+      .catch((error) => {
+        if (errorHandler) {
+          errorHandler(error);
+        }
+      });
+  } else {
+    axios
+      .post(url, payload, config)
+      .then((response) => {
+        if (successHandler) {
+          successHandler(response.data);
+        }
+      })
+      .catch((error) => {
+        if (errorHandler) {
+          errorHandler(error);
+        }
+      });
+  }
 };
 
 
