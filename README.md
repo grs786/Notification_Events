@@ -42,6 +42,3 @@
   -> Install firebase npm package, npm i react-native-sse --save
   -> Open the channel for sse events using its addEventListener events method with "open" as first argument.
 
-
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
