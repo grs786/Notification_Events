@@ -42,27 +42,11 @@ export const getSSEEvents = (props) => {
     });
 
     eventSource.addEventListener("message", (event) => {
-        let eventData = JSON.parse(event?.data);
-        storeSSEDataList(sseList, eventData);
-    });
+        eventData = JSON.parse(event?.data);
+        return sseList.push(eventData)
 
-    let storeSSEDataList = (arr, item) => {
-        setRefreshData(false);
-        const found = arr.some(data => data?.eventType === item?.eventType);
-        if (found === false) {
-            sseList.push(item);
-        } else {
-            for (let i = 0; i < sseList.length; i++) {
-                if (sseList[i]?.vinNumber === item?.vinNumber) {
-                    if (sseList[i]?.alertName === item?.alertName) {
-                        sseList.splice(i, 1);
-                    }
-                }
-            }
-            sseList.push(item);
-            
-        }
-    };
+    });
+    return sseList
 },
 
 export const getAPI = async (endURL) => {
@@ -77,65 +61,65 @@ export const getAPI = async (endURL) => {
 };
 
 export const sendAPICall = async (
-  url,
-  payload,
-  successHandler,
-  errorHandler,
-  requestType,
-  isCustomer
+    url,
+    payload,
+    successHandler,
+    errorHandler,
+    requestType,
+    isCustomer
 ) => {
-  const authToken = await AsyncStorage.getItem("AuthToken");
-  let config = {};
-  if (isCustomer && authToken) {
-    config = {
-      headers: {
-        Authorization: authToken,
-      },
-    };
-  }
-  if (requestType === "PUT") {
-    axios
-      .put(url, payload, config)
-      .then((response) => {
-        if (response.status === 401) {
-          return;
-        }
-        successHandler(response);
-      })
-      .catch((error) => {
-        if (errorHandler) {
-          errorHandler(error);
-        }
-      });
-  } else if (requestType === "GET") {
-    config.type = "text";
-    axios
-      .get(url, config)
-      .then((response) => {
-        if (response.status === 401) {
-          return;
-        }
-        successHandler(response.data);
-      })
-      .catch((error) => {
-        if (errorHandler) {
-          errorHandler(error);
-        }
-      });
-  } else {
-    axios
-      .post(url, payload, config)
-      .then((response) => {
-        if (successHandler) {
-          successHandler(response.data);
-        }
-      })
-      .catch((error) => {
-        if (errorHandler) {
-          errorHandler(error);
-        }
-      });
-  }
+    const authToken = await AsyncStorage.getItem("AuthToken");
+    let config = {};
+    if (isCustomer && authToken) {
+        config = {
+            headers: {
+                Authorization: authToken,
+            },
+        };
+    }
+    if (requestType === "PUT") {
+        axios
+            .put(url, payload, config)
+            .then((response) => {
+                if (response.status === 401) {
+                    return;
+                }
+                successHandler(response);
+            })
+            .catch((error) => {
+                if (errorHandler) {
+                    errorHandler(error);
+                }
+            });
+    } else if (requestType === "GET") {
+        config.type = "text";
+        axios
+            .get(url, config)
+            .then((response) => {
+                if (response.status === 401) {
+                    return;
+                }
+                successHandler(response.data);
+            })
+            .catch((error) => {
+                if (errorHandler) {
+                    errorHandler(error);
+                }
+            });
+    } else {
+        axios
+            .post(url, payload, config)
+            .then((response) => {
+                if (successHandler) {
+                    successHandler(response.data);
+                }
+            })
+            .catch((error) => {
+                if (errorHandler) {
+                    errorHandler(error);
+                }
+            });
+    }
 };
 
 
